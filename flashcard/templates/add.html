@@ -1,0 +1,47 @@
+
+{% extends "layout.html" %}
+
+
+{% block head %}
+<title> flashcard --- add</title>
+{% endblock %}
+
+
+
+{% block body %}
+
+<form method = "POST" action="/add" name = "asdf_form" enctype='/multipart/form-data'>
+
+
+  <!-- FRONT OF CARD -->
+  <div class="form-group">
+    <label for="exampleTextarea">Front</label>
+    <input type="textarea" class="form-control" name='form_front' rows="3"/>
+  </div>
+
+
+
+  <!-- BACK OF CARD -->
+  <div class="form-group">
+    <label for="exampleTextarea">Back</label>
+    <input type="textarea" class="form-control" name='form_back' rows="3"/>
+  </div>
+
+
+
+  <!-- LABELS -->
+  <div class="form-group">
+     <label for="exampleInputPassword1">Labels</label>
+     <input type="password" class="form-control" name='form_label' placeholder="None"/>
+   </div>
+
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+
+</form>
+
+<a href="/">Home</a>
+
+
+{% endblock %}

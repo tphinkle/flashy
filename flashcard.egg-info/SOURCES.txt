@@ -1,0 +1,7 @@
+flashcard/main.py
+flashcard/views.py
+flashcard.egg-info/PKG-INFO
+flashcard.egg-info/SOURCES.txt
+flashcard.egg-info/dependency_links.txt
+flashcard.egg-info/requires.txt
+flashcard.egg-info/top_level.txt

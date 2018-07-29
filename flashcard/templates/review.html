@@ -1,0 +1,247 @@
+
+{% extends "layout.html" %}
+
+
+{% block head %}
+  <title> flashcard --- review </title>
+{% endblock %}
+
+
+{% block body %}
+
+
+  <canvas id="card_canvas" width="600" height="300" style="border:1px solid #d3d3d3;">
+  Your browser does not support the HTML5 canvas tag.</canvas>
+
+  <button type="submit" class="btn btn-primary" id="flashcard_incorrect_button">Need more practice...</button>
+
+  <button type="submit" class="btn btn-primary" id="flashcard_correct_button">Got it!</button>
+
+  <a href="/">home</a>
+
+
+  <script>
+    // Setup canvas
+    var canvas = document.getElementById("card_canvas");
+    var canvas_context = canvas.getContext("2d");
+
+
+
+    function redraw_canvas(){
+      canvas_context.clearRect ( 0 , 0 , canvas.width, canvas.height );
+      canvas_context.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+    };
+
+
+    // Add flashcard image
+    imageObj = new Image();
+
+    var card_state = "front";
+    imageObj.onload = function(){
+      redraw_canvas();
+    };
+    imageObj.src = "/static/img/flashcard_0.jpg";
+
+
+     // Define card flipping behavior
+    function flip_card(){
+      if (flashcard.current_side == "front") {
+       set_flashcard_back();
+
+      } else {
+       set_flashcard_front();
+      }
+
+    };
+
+   canvas.addEventListener('click', flip_card, false);
+
+
+
+
+   function set_flashcard_front(){
+
+     // Change flashcard state
+     flashcard.current_side = "front";
+
+     // Change UI
+     var text = flashcard.front;
+     var label = flashcard.label[0];
+     draw_flashcard_front(text, label);
+   };
+
+   function set_flashcard_back(){
+
+     // Change flashcard state
+     flashcard.current_side = "back";
+
+
+     // Change UI
+     var text = flashcard.back;
+     var label = flashcard.label[0];
+     draw_flashcard_back(text, label);
+   };
+
+   function get_linebreak_position(text, n){
+     // Finds the last white space character in text before position n
+     var sub_text = text.substr(0,n);
+     return sub_text.lastIndexOf(' ');
+
+   }
+
+   function draw_flashcard_front(text, label){
+
+     redraw_canvas();
+
+
+
+
+     // Draw main text
+     canvas_context.font = "30px Arial";
+     canvas_context.textAlign="left";
+
+
+     var text_length = text.length;
+     var line_length = 40;
+
+     var x = canvas.width/10;
+     var dy=45;
+
+     var i = 0;
+     var break_positions = [];
+     var lines = [];
+     var break_pos = 0;
+     var keep_going = true;
+     while(keep_going == true) {
+
+
+       if(text_length - break_pos <= line_length){
+         keep_going = false;
+         sub_text = text.substr(break_pos, text_length - break_pos);
+         canvas_context.fillText(sub_text, x, canvas.height/2+i*dy);
+
+       }
+       else {
+         sub_text = text.substr(break_pos, line_length);
+         current_break_pos = sub_text.lastIndexOf(' ') + 1;
+         canvas_context.fillText(sub_text.substr(0, current_break_pos), x, canvas.height/2+i*dy);
+         break_pos += current_break_pos;
+         i += 1;
+       }
+
+
+    }
+
+
+     // Draw labels
+     canvas_context.font = "15px Arial";
+     canvas_context.textAlign="center";
+     canvas_context.fillText(label, canvas.width/2, 0.9*canvas.height);
+
+   };
+
+
+   function draw_flashcard_back(text, label){
+
+     redraw_canvas();
+
+
+     // Draw main text
+     canvas_context.font = "20px Arial";
+     canvas_context.textAlign="center";
+     canvas_context.fillText(text, canvas.width/2, canvas.height/2);
+
+     // Draw labels
+     canvas_context.font = "15px Arial";
+     canvas_context.textAlign="center";
+     canvas_context.fillText(label, canvas.width/2, 0.9*canvas.height);
+
+   };
+
+
+    // Define next behavior
+    var flashcard_correct_button = document.getElementById("flashcard_correct_button");
+    var flashcard_incorrect_button = document.getElementById("flashcard_incorrect_button");
+
+    class FlashCard {
+      constructor(front, back, label, id) {
+        this.front = front;
+        this.back = back;
+        this.label = label;
+        this.id = id;
+        this.current_side = "front";
+      };
+
+
+
+    };
+
+    var flashcard;
+
+    function set_next_flashcard(response){
+
+      console.log(response);
+
+      var front = response.front;
+      var back = response.back;
+      var label = response.label;
+      var id = response.id;
+
+      flashcard = new FlashCard(front, back, label, id);
+
+      set_flashcard_front();
+    };
+
+
+
+    function request_next_flashcard(){
+      console.log('requesting next flashcard!!');
+      fetch('/request_flashcard').then((response) => response.json()).then(function(data) {
+                                    set_next_flashcard(data)});
+
+    };
+
+    function flashcard_incorrect_click(){
+      post_flashcard_incorrect();
+      request_next_flashcard();
+    }
+
+
+    function flashcard_correct_click(){
+      post_flashcard_correct();
+      request_next_flashcard();
+    }
+
+    function post_flashcard_incorrect(){
+      // Send incorrect data to server
+      console.log('post incorrect');
+      // Get new data
+
+    };
+
+    function post_flashcard_correct(){
+      // Send correct data to server
+
+      // Get new data
+      console.log('post correct');
+
+
+    };
+
+    flashcard_incorrect_button.addEventListener('click', flashcard_incorrect_click, false);
+
+    flashcard_correct_button.addEventListener('click', flashcard_correct_click, false);
+
+
+
+
+
+  </script>
+
+
+
+
+
+
+
+{% endblock %}
