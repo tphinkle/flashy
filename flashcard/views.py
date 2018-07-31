@@ -19,6 +19,8 @@ from flask_cors import CORS, cross_origin
 import main
 sys.path.append(main.FLASHCARD_BASE_DIRECTORY + '/models')
 import flashcard
+import flashcard_server
+import users
 
 
 # Enables javascript requests json
@@ -35,6 +37,11 @@ def format_file_path_for_routing(file_path):
     return file_path
 
 
+def get_request_json(request):
+    return request.form.to_dict(flat=False)
+
+
+
 
 @views.route('/', methods=['GET', 'POST'])
 def index():
@@ -47,16 +54,59 @@ def index():
         to the server and the user will be redirected to the uploads page
     '''
 
-
-
-
     # Get method type
     method = flask.request.method
 
 
+
+
+
+
     # Get
     if method == 'GET':
-        return flask.render_template('index.html')
+        if 'username' in flask.session:
+            return flask.render_template('index.html')
+        else:
+            return flask.render_template('login.html')
+
+    elif method == 'POST':
+
+
+
+        request_json = get_request_json(flask.request)
+
+
+        # Log in user
+        if 'login' in request_json.keys():
+            print('login')
+            login_email_address = request_json['login_email_address'][0]
+            login_password = request_json['login_password'][0]
+
+            login_success = users.login_user(login_email_address, login_password)
+
+
+
+        # Register user
+        elif 'register' in request_json.keys():
+            print('register')
+            register_email_address = request_json['register_email_address'][0]
+            register_password = request_json['register_password'][0]
+            register_name = request_json['register_name'][0]
+
+            login_success = users.register_user(register_email_address, register_password, register_name)
+
+            if login_success:
+                login_email_address = register_email_address
+
+
+        if login_success:
+            flask.session['username'] = login_email_address
+            return flask.render_template('index.html')
+        else:
+            return flask.render_template('login.html')
+
+
+
 
 
 @views.route('/add', methods = ['GET', 'POST'])
@@ -76,14 +126,12 @@ def add():
 
         # Get data
 
-        print(flask.request.form)
 
-
-        request_json = flask.request.form.to_dict(flat=False)
+        request_json = get_request_json(flask.request)
 
 
 
-        flashcard.FlashCardServer.save_flashcard(request_json)
+        flashcard_server.FlashCardServerPostGres.save_flashcard(request_json)
 
 
 
@@ -111,10 +159,15 @@ def review():
 
 @views.route('/request_flashcard')
 def request_flashcard():
-    new_flashcard = flashcard.FlashCardServer.get_next_flashcard()
+    new_flashcard = flashcard_server.FlashCardServerPostGres.get_next_flashcard()
 
-    print(new_flashcard['label'])
 
     new_flashcard_json = flask.jsonify(new_flashcard)
 
+
     return new_flashcard_json
+
+
+@views.route('/login')
+def login():
+    return flask.render_template('login.html')
