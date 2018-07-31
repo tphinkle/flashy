@@ -66,8 +66,8 @@
 
      // Change UI
      var text = flashcard.front;
-     var label = flashcard.label[0];
-     draw_flashcard_front(text, label);
+     var labels = flashcard.labels[0];
+     draw_flashcard_front(text, labels);
    };
 
    function set_flashcard_back(){
@@ -78,8 +78,8 @@
 
      // Change UI
      var text = flashcard.back;
-     var label = flashcard.label[0];
-     draw_flashcard_back(text, label);
+     var labels = flashcard.labels[0];
+     draw_flashcard_back(text, labels);
    };
 
    function get_linebreak_position(text, n){
@@ -89,7 +89,7 @@
 
    }
 
-   function draw_flashcard_front(text, label){
+   function draw_flashcard_front(text, labels){
 
      redraw_canvas();
 
@@ -136,12 +136,12 @@
      // Draw labels
      canvas_context.font = "15px Arial";
      canvas_context.textAlign="center";
-     canvas_context.fillText(label, canvas.width/2, 0.9*canvas.height);
+     canvas_context.fillText(labels, canvas.width/2, 0.9*canvas.height);
 
    };
 
 
-   function draw_flashcard_back(text, label){
+   function draw_flashcard_back(text, labels){
 
      redraw_canvas();
 
@@ -154,7 +154,7 @@
      // Draw labels
      canvas_context.font = "15px Arial";
      canvas_context.textAlign="center";
-     canvas_context.fillText(label, canvas.width/2, 0.9*canvas.height);
+     canvas_context.fillText(labels, canvas.width/2, 0.9*canvas.height);
 
    };
 
@@ -164,10 +164,10 @@
     var flashcard_incorrect_button = document.getElementById("flashcard_incorrect_button");
 
     class FlashCard {
-      constructor(front, back, label, id) {
+      constructor(front, back, labels, id) {
         this.front = front;
         this.back = back;
-        this.label = label;
+        this.labels = labels;
         this.id = id;
         this.current_side = "front";
       };
@@ -184,10 +184,10 @@
 
       var front = response.front;
       var back = response.back;
-      var label = response.label;
+      var labels = response.labels;
       var id = response.id;
 
-      flashcard = new FlashCard(front, back, label, id);
+      flashcard = new FlashCard(front, back, labels, id);
 
       set_flashcard_front();
     };
@@ -196,7 +196,7 @@
 
     function request_next_flashcard(){
       console.log('requesting next flashcard!!');
-      fetch('/request_flashcard').then((response) => response.json()).then(function(data) {
+      fetch('/request_flashcard', {credentials: 'include'}).then((response) => response.json()).then(function(data) {
                                     set_next_flashcard(data)});
 
     };

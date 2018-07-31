@@ -10,13 +10,13 @@
 
 {% block body %}
 
-<form method = "POST" action="/add" name = "asdf_form" enctype='/multipart/form-data'>
+<form method = "POST" action="/add" name = "new_flashcard_form" enctype='/multipart/form-data'>
 
 
   <!-- FRONT OF CARD -->
   <div class="form-group">
     <label for="exampleTextarea">Front</label>
-    <input type="textarea" class="form-control" name='form_front' rows="3"/>
+    <input type="textarea" class="form-control" name='new_flashcard_front' rows="3"/>
   </div>
 
 
@@ -24,7 +24,7 @@
   <!-- BACK OF CARD -->
   <div class="form-group">
     <label for="exampleTextarea">Back</label>
-    <input type="textarea" class="form-control" name='form_back' rows="3"/>
+    <input type="textarea" class="form-control" name='new_flashcard_back' rows="3"/>
   </div>
 
 
@@ -32,7 +32,7 @@
   <!-- LABELS -->
   <div class="form-group">
      <label for="exampleInputPassword1">Labels</label>
-     <input type="textarea" class="form-control" name='form_label' placeholder="None"/>
+     <input type="textarea" class="form-control" name='new_flashcard_label' placeholder="None"/>
    </div>
 
 

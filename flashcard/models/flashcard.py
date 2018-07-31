@@ -16,64 +16,37 @@ import numpy as np
 # Program specific
 sys.path.append('..')
 import main
-import flashcard
 import sql_server
 
 
+def convert_to_list(scalar):
+    if type(scalar) != list:
+        return [scalar]
 
 
 class FlashCardServer(object):
 
-    form_translator_dict = {
-        'form_front': 'front',
-        'form_back': 'back',
-        'form_label': 'label'
-    }
+
+    def create_new_flashcard(user_id, front, back, labels):
+        labels = convert_to_list(labels)
+
+        flashcard_id = sql_server.SQLServer.add_flashcard_to_flashcards(front, back, labels)
+        sql_server.SQLServer.add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id)
+
+        return flashcard_id
 
 
 
-    def save_flashcard(flashcard):
 
-        # Convert field names
-        temp_flashcard = {}
-        for key, value in flashcard.items():
-            temp_flashcard[FlashCardServer.form_translator_dict[key]] = value
-        flashcard = temp_flashcard
-
-        # Convert values to scalar if list
-        for key in ['front', 'back']:
-            if type(flashcard[key]) == list:
-                flashcard[key] = flashcard[key][0]
-
-        front = flashcard['front']
-        back = flashcard['back']
-        labels = flashcard['label']
-
-        sql_server.SQLServer.insert_flashcard(front, back, labels)
+    def get_next_flashcard(user_id):
 
 
-
-        return
-
-
-    def get_next_flashcard():
-
-
-        flashcards = SQLServer.load_all_flashcards()
+        flashcards = sql_server.SQLServer.get_flashcards_by_user_id(user_id)
 
         i = np.random.randint(0, len(flashcards))
 
-        print(i, flashcards[i])
-
-        return flashcards[i]
+        flashcard = flashcards[i]
 
 
 
-
-
-
-class FlashCard(object):
-    def __init__(flashcard_json):
-        self._id = flashcard_json['id']
-        self._text = flashcard_json['card']['text']
-        self._labels = flashcard_json['labels']
+        return flashcard

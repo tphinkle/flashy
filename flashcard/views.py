@@ -19,7 +19,6 @@ from flask_cors import CORS, cross_origin
 import main
 sys.path.append(main.FLASHCARD_BASE_DIRECTORY + '/models')
 import flashcard
-import flashcard_server
 import users
 
 
@@ -57,14 +56,11 @@ def index():
     # Get method type
     method = flask.request.method
 
-
-
-
-
-
     # Get
     if method == 'GET':
         if 'username' in flask.session:
+            print(flask.session)
+            print('user (index!)', flask.session['user_id'])
             return flask.render_template('index.html')
         else:
             return flask.render_template('login.html')
@@ -78,34 +74,39 @@ def index():
 
         # Log in user
         if 'login' in request_json.keys():
-            print('login')
-            login_email_address = request_json['login_email_address'][0]
-            login_password = request_json['login_password'][0]
+            email = request_json['login_email_address'][0]
+            password = request_json['login_password'][0]
 
-            login_success = users.login_user(login_email_address, login_password)
+            user_id = users.login_user(email, password)
 
 
 
         # Register user
         elif 'register' in request_json.keys():
-            print('register')
-            register_email_address = request_json['register_email_address'][0]
-            register_password = request_json['register_password'][0]
-            register_name = request_json['register_name'][0]
+            email = request_json['register_email_address'][0]
+            password = request_json['register_password'][0]
+            name = request_json['register_name'][0]
 
-            login_success = users.register_user(register_email_address, register_password, register_name)
-
-            if login_success:
-                login_email_address = register_email_address
+            user_id = users.register_user(email, password, name)
 
 
-        if login_success:
-            flask.session['username'] = login_email_address
+
+
+        if user_id != None:
+            flask.session['username'] = email
+            flask.session['user_id'] = user_id
+
+            print('user id!!!', flask.session['user_id'])
+
             return flask.render_template('index.html')
+
         else:
             return flask.render_template('login.html')
 
 
+@views.route('/login')
+def login():
+    return flask.render_template('login.html')
 
 
 
@@ -125,16 +126,13 @@ def add():
     elif method == 'POST':
 
         # Get data
-
+        user_id = flask.session['user_id']
 
         request_json = get_request_json(flask.request)
-
-
-
-        flashcard_server.FlashCardServerPostGres.save_flashcard(request_json)
-
-
-
+        front = request_json['new_flashcard_front'][0]
+        back = request_json['new_flashcard_back'][0]
+        labels = request_json['new_flashcard_label'][0]
+        flashcard.FlashCardServer.create_new_flashcard(user_id, front, back, labels)
 
 
 
@@ -157,17 +155,22 @@ def review():
 
 
 
-@views.route('/request_flashcard')
+@views.route('/request_flashcard', methods = ['GET'])
 def request_flashcard():
-    new_flashcard = flashcard_server.FlashCardServerPostGres.get_next_flashcard()
+
+    print(flask.session)
+    next_flashcard = flashcard.FlashCardServer.get_next_flashcard(flask.session['user_id'])
 
 
-    new_flashcard_json = flask.jsonify(new_flashcard)
+    next_flashcard_json = flask.jsonify(next_flashcard)
+
+    print('json', next_flashcard_json)
+    print(dir(next_flashcard_json))
+    print(next_flashcard_json.data)
+
+    dic = {'a': '1'}
+
+    print(flask.jsonify(dic).data)
 
 
-    return new_flashcard_json
-
-
-@views.route('/login')
-def login():
-    return flask.render_template('login.html')
+    return next_flashcard_json

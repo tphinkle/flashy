@@ -41,19 +41,16 @@ class SQLServer(object):
     # Create tables (if they do not exist)
 
     conn = psycopg2.connect(f"dbname={dbname} user={username} host='localhost' password={password}")
-    cur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+    cur = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
 
 
-    table_names = ['users', 'flashcards', 'user_collection', 'user_site_activity', 'user_flashcard_activity']
+
+    table_names = ['users', 'flashcards', 'user_flashcard_relations', 'user_site_activity', 'user_flashcard_activity']
     for table_name in table_names:
         cur.execute(f"""SELECT COUNT(*) FROM {table_name} LIMIT 1;""")
-        print(table_name, cur.fetchone()[0])
+        print(table_name, cur.fetchall())
 
-
-
-    def get_cur():
-        return SQLServer.cur
 
 
     def get_user_by_email(email):
@@ -66,7 +63,7 @@ class SQLServer(object):
 
 
 
-    def add_user(email, password, name):
+    def add_user_to_users(email, password, name):
 
 
 
@@ -74,44 +71,49 @@ class SQLServer(object):
         date_created = datetime.datetime.now()
 
         # Insert into table
-        query = f"""INSERT INTO users(email, password, name, date_created) VALUES ('{email}', '{password}', '{name}', '{date_created}')"""
-        SQLServer.cur.execute(query)
+        query = """INSERT INTO users(email, password, name, date_created) VALUES (%s, %s, %s, %s) RETURNING user_id;"""
+        SQLServer.cur.execute(query, (email, password, name, date_created))
         SQLServer.conn.commit()
-        return True
+        user_id = SQLServer.cur.fetchone()['user_id']
+
+        return user_id
 
 
-    def insert_flashcard(front, back, labels):
+    def add_flashcard_to_flashcards(front, back, labels):
 
         # Format
-        front, back, labels = format_query_args(front, back, labels)
+        front, back, labels = SQLServer.format_query_args(front, back, labels)
 
-        # Check SQL injection
-        front, back, labels = validate_safe_SQL(front, back, labels)
 
         # Insert into table
-        query = f"""INSERT INTO flashcards(front, back, labels) VALUES ('{front}', '{back}', '{labels}')"""
-        SQLServer.cur.execute(query)
+        query = """INSERT INTO flashcards(front, back, labels) VALUES (%s, %s, %s) RETURNING flashcard_id;"""
+        SQLServer.cur.execute(query, (front, back, labels))
+
+        SQLServer.conn.commit()
+        flashcard_id = SQLServer.cur.fetchone()[0]
+        return flashcard_id
+
+    def add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id):
+        # Insert into table
+        query = """INSERT INTO user_flashcard_relations(user_id, flashcard_id) VALUES (%s, %s);"""
+        SQLServer.cur.execute(query, (user_id, flashcard_id));
         SQLServer.conn.commit()
 
-        labels = '{' + ''.join(label for label in labels) + '}'
 
-    def load_all_flashcards():
 
-        query = f"""SELECT * FROM flashcards;""";
-        SQLServer.cur.execute(query)
+
+
+
+    def get_flashcards_by_user_id(user_id):
+        query = f"""SELECT * FROM flashcards WHERE flashcard_id IN \
+                    (SELECT flashcard_id FROM user_flashcard_relations LEFT JOIN users \
+                    ON (user_flashcard_relations.user_id = users.user_id) WHERE users.user_id = {user_id});"""
+
+        SQLServer.cur.execute(query);
         flashcards = SQLServer.cur.fetchall()
 
-        formatted_flashcards = []
-        for flashcard in flashcards:
-            formatted_flashcard = {}
-            formatted_flashcard['front'] = flashcard['front']
-            formatted_flashcard['back'] = flashcard['back']
-            formatted_flashcard['id'] = flashcard['card_id']
-            formatted_flashcard['label'] = flashcard['labels']
-            formatted_flashcards.append(formatted_flashcard)
 
-
-        return formatted_flashcards
+        return flashcards
 
 
 
@@ -132,9 +134,3 @@ class SQLServer(object):
 
 
         return result
-
-
-
-
-    def validate_safe_SQL(*argv):
-        return argv

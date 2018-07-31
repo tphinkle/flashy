@@ -20,11 +20,12 @@ import numpy as np
 # Program specific
 sys.path.append('..')
 import main
-import flashcard
 import sql_server
 
 
-
+def get_user_by_email(email):
+    user = sql_server.SQLServer.get_user_by_email(email)
+    return user
 
 def register_user(email_address, password, name):
     user = sql_server.SQLServer.get_user_by_email(email_address)
@@ -32,39 +33,34 @@ def register_user(email_address, password, name):
 
     # Invalid e-mail address
     if '@' not in email_address:
-        return False
+        return None
 
     # User doesn't already exist
     if user == None:
-        print('adding new user!')
-        print(password)
         hashed_password = hash_password(password)
-        sql_server.SQLServer.add_user(email_address, hashed_password, name)
-        return True
+        user_id = sql_server.SQLServer.add_user_to_users(email_address, hashed_password, name)
+        return user_id
 
     # User already exists
     else:
-        return False
+        return None
 
 
 def login_user(email_address, password):
     user = sql_server.SQLServer.get_user_by_email(email_address)
 
-    expected_hashed_password = user['password']
     # User does not exist
     if user == None:
-        return False
-
-
+        return None
 
     # Correct password
+    expected_hashed_password = user['password']
     if werkzeug.security.check_password_hash(expected_hashed_password, password):
-        print('successful login')
-        return True
+        return user['user_id']
+        
     # Incorrect password
     else:
-        print('unsuccessful login')
-        return False
+        return None
 
 
 def hash_password(password):
