@@ -30,8 +30,8 @@ class FlashCardServer(object):
     def create_new_flashcard(user_id, front, back, labels):
         labels = convert_to_list(labels)
 
-        flashcard_id = sql_server.SQLServer.add_flashcard_to_flashcards(front, back, labels)
-        sql_server.SQLServer.add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id)
+        flashcard_id = sql_server.SQLServer.add_flashcard_to_flashcards(front, back)
+        sql_server.SQLServer.add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id, labels)
 
         return flashcard_id
 

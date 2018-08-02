@@ -79,25 +79,34 @@ class SQLServer(object):
         return user_id
 
 
-    def add_flashcard_to_flashcards(front, back, labels):
+    def add_flashcard_to_flashcards(front, back):
 
         # Format
-        front, back, labels = SQLServer.format_query_args(front, back, labels)
+        front, back = SQLServer.format_query_args(front, back)
 
 
         # Insert into table
-        query = """INSERT INTO flashcards(front, back, labels) VALUES (%s, %s, %s) RETURNING flashcard_id;"""
-        SQLServer.cur.execute(query, (front, back, labels))
+        query = """INSERT INTO flashcards(front, back) VALUES (%s, %s) RETURNING flashcard_id;"""
+        SQLServer.cur.execute(query, (front, back))
 
         SQLServer.conn.commit()
-        flashcard_id = SQLServer.cur.fetchone()[0]
+        flashcard_id = SQLServer.cur.fetchone()['flashcard_id']
         return flashcard_id
 
-    def add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id):
+    def add_user_flashcard_to_user_flashcard_relations(user_id, flashcard_id, labels):
         # Insert into table
-        query = """INSERT INTO user_flashcard_relations(user_id, flashcard_id) VALUES (%s, %s);"""
-        SQLServer.cur.execute(query, (user_id, flashcard_id));
+        user_id, flashcard_id, labels = SQLServer.format_query_args(user_id, flashcard_id, labels)
+
+        query = """INSERT INTO user_flashcard_relations(user_id, flashcard_id, labels) VALUES (%s, %s, %s);"""
+        SQLServer.cur.execute(query, (user_id, flashcard_id, labels));
         SQLServer.conn.commit()
+
+    def add_user_flashcard_action_to_user_flashcard_activity(user_id, flashcard_id, action):
+
+        user_id, flashcard_id, activity = SQLServer.format_query_args(user_id, flashcard_id, labels)
+        query = """INSERT INTO user_flashcard_activity(user_id, flashcard_id, action) VALUES (%s, %s, %s);"""
+        SQLServer.cur.execute(query, (user_id, flashcard_id, activity))
+        SQLServer.cur.commit()
 
 
 
@@ -106,8 +115,15 @@ class SQLServer(object):
 
     def get_flashcards_by_user_id(user_id):
         query = f"""SELECT * FROM flashcards WHERE flashcard_id IN \
-                    (SELECT flashcard_id FROM user_flashcard_relations LEFT JOIN users \
+                    (SELECT flashcard_id, labels FROM user_flashcard_relations LEFT JOIN users \
                     ON (user_flashcard_relations.user_id = users.user_id) WHERE users.user_id = {user_id});"""
+
+
+        query = f"""SELECT * FROM flashcards LEFT JOIN user_flashcard_relations ON \
+            (flashcards.flashcard_id = user_flashcard_relations.flashcard_id) WHERE \
+            user_flashcard_relations.user_id = {user_id};"""
+
+
 
         SQLServer.cur.execute(query);
         flashcards = SQLServer.cur.fetchall()
@@ -127,7 +143,8 @@ class SQLServer(object):
                  arg = '{' + ''.join(ele for ele in arg) + '}'
 
             # Replace single quotation mark w/ double
-            arg = arg.replace("'", "''")
+            if type(arg) == str:
+                arg = arg.replace("'", "''")
 
             # Append
             result.append(arg)

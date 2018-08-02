@@ -19,7 +19,7 @@ from flask_cors import CORS, cross_origin
 import main
 sys.path.append(main.FLASHCARD_BASE_DIRECTORY + '/models')
 import flashcard
-import users
+import user
 
 
 # Enables javascript requests json
@@ -77,7 +77,7 @@ def index():
             email = request_json['login_email_address'][0]
             password = request_json['login_password'][0]
 
-            user_id = users.login_user(email, password)
+            user_id = user.login_user(email, password)
 
 
 
@@ -87,7 +87,7 @@ def index():
             password = request_json['register_password'][0]
             name = request_json['register_name'][0]
 
-            user_id = users.register_user(email, password, name)
+            user_id = user.register_user(email, password, name)
 
 
 
@@ -155,22 +155,28 @@ def review():
 
 
 
-@views.route('/request_flashcard', methods = ['GET'])
-def request_flashcard():
+@views.route('/flashcard', methods = ['GET'])
+def flashcard_get():
 
-    print(flask.session)
+
     next_flashcard = flashcard.FlashCardServer.get_next_flashcard(flask.session['user_id'])
-
-
+    print(next_flashcard)
     next_flashcard_json = flask.jsonify(next_flashcard)
 
-    print('json', next_flashcard_json)
-    print(dir(next_flashcard_json))
-    print(next_flashcard_json.data)
-
-    dic = {'a': '1'}
-
-    print(flask.jsonify(dic).data)
+    print('jsoooon', next_flashcard_json)
 
 
     return next_flashcard_json
+
+
+@views.route('/flashcard/submit/answer=<answer>', methods = ['POST'])
+def flashcard_post(answer):
+
+
+    data = flask.request.get_json()
+    flashcard_id = data['flashcard_id']
+    user_id =flask.session['user_id']
+
+
+
+    return '201'
