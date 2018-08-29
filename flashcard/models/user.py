@@ -5,30 +5,18 @@ import json
 import sys
 import os
 
-# Postgres and SQL
-from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database
-import psycopg2
 
 # Flask
 import werkzeug.security
 
-
-# Scientific computing
-import numpy as np
-
 # Program specific
 sys.path.append('..')
 import main
-import sql_server
+import db_server
 
-
-def get_user_by_email(email):
-    user = sql_server.SQLServer.get_user_by_email(email)
-    return user
 
 def register_user(email_address, password, name):
-    user = sql_server.SQLServer.get_user_by_email(email_address)
+    user = db_server.SQLServer.get_users_by_email(email_address)
 
 
     # Invalid e-mail address
@@ -47,7 +35,7 @@ def register_user(email_address, password, name):
 
 
 def login_user(email_address, password):
-    user = sql_server.SQLServer.get_user_by_email(email_address)
+    user = sql_server.SQLServer.get_users_by_email(email_address)
 
     # User does not exist
     if user == None:
@@ -57,7 +45,7 @@ def login_user(email_address, password):
     expected_hashed_password = user['password']
     if werkzeug.security.check_password_hash(expected_hashed_password, password):
         return user['user_id']
-        
+
     # Incorrect password
     else:
         return None

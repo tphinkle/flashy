@@ -187,6 +187,11 @@
       var labels = response.labels;
       var id = response.flashcard_id;
 
+      console.log(front);
+      console.log(back);
+      console.log(labels);
+      console.log(id);
+
       flashcard = new FlashCard(front, back, labels, id);
 
       console.log('setting next flashcard');
@@ -198,7 +203,6 @@
 
 
     function request_next_flashcard(){
-      console.log('requesting next flashcard!!');
       fetch('/flashcard', {credentials: 'include'}).then((response) => response.json()).then(function(data) {
                                     set_next_flashcard(data)});
 
@@ -207,15 +211,13 @@
 
 
     function post_flashcard_answer(answer){
-      console.log('asdfasdf');
-      console.log(flashcard.id);
-      fetch('/flashcard/submit/answer='+answer, {
+      fetch('/flashcard/submit', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({'flashcard_id': flashcard.id}),
+        body: JSON.stringify({'flashcard_id': flashcard.id, 'answer': answer}),
         credentials: 'include'
       });
     };
@@ -226,6 +228,10 @@
 
     flashcard_incorrect_button.addEventListener('click', function () {post_flashcard_answer('incorrect')}, false)
     flashcard_correct_button.addEventListener('click', function() {post_flashcard_answer('correct')}, false)
+
+
+
+    request_next_flashcard();
 
   </script>
 

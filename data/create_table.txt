@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (user_id SERIAL PRIMARY KEY, name text, email t
 CREATE TABLE IF NOT EXISTS flashcards (flashcard_id SERIAL PRIMARY KEY, front text, back text);
 
 -- user_flashcard_relations
-CREATE TABLE IF NOT EXISTS user_flashcard_relations (user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, flashcard_id INT NOT NULL REFERENCES flashcards(flashcard_id) ON DELETE CASCADE, labels text[]);
+CREATE TABLE IF NOT EXISTS user_flashcard_relations (user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, flashcard_id INT NOT NULL REFERENCES flashcards(flashcard_id) ON DELETE CASCADE, labels text[], decay_rate real);
 
 -- user_site_activity
 CREATE TABLE IF NOT EXISTS user_site_activity (site_action_id SERIAL PRIMARY KEY, user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, datetime timestamp, site_action_name text);

@@ -1,6 +1,7 @@
 # Imports
 
 # Python standard library
+import datetime
 import json
 import os
 import sys
@@ -18,8 +19,9 @@ from flask_cors import CORS, cross_origin
 # Program specific
 import main
 sys.path.append(main.FLASHCARD_BASE_DIRECTORY + '/models')
-import flashcard
+import server
 import user
+
 
 
 # Enables javascript requests json
@@ -28,6 +30,14 @@ CORS(main.app)
 
 # Define views
 views = flask.Blueprint('views', __name__)
+
+
+# For URL Query parameter, use request.args
+# For Form input, use request.form
+# For data type application/json, use request.data -> request.get_json()
+
+
+
 
 
 
@@ -59,8 +69,6 @@ def index():
     # Get
     if method == 'GET':
         if 'username' in flask.session:
-            print(flask.session)
-            print('user (index!)', flask.session['user_id'])
             return flask.render_template('index.html')
         else:
             return flask.render_template('login.html')
@@ -68,24 +76,25 @@ def index():
     elif method == 'POST':
 
 
+        form_data = flask.request.form.to_dict(flat = False)
 
-        request_json = get_request_json(flask.request)
+        print(form_data)
 
 
         # Log in user
-        if 'login' in request_json.keys():
-            email = request_json['login_email_address'][0]
-            password = request_json['login_password'][0]
+        if 'login' in form_data.keys():
+            email = form_data['login_email_address'][0]
+            password = form_data['login_password'][0]
 
             user_id = user.login_user(email, password)
 
 
 
         # Register user
-        elif 'register' in request_json.keys():
-            email = request_json['register_email_address'][0]
-            password = request_json['register_password'][0]
-            name = request_json['register_name'][0]
+        elif 'register' in form_data.keys():
+            email = form_data['register_email_address'][0]
+            password = form_data['register_password'][0]
+            name = form_data['register_name'][0]
 
             user_id = user.register_user(email, password, name)
 
@@ -95,8 +104,6 @@ def index():
         if user_id != None:
             flask.session['username'] = email
             flask.session['user_id'] = user_id
-
-            print('user id!!!', flask.session['user_id'])
 
             return flask.render_template('index.html')
 
@@ -126,13 +133,15 @@ def add():
     elif method == 'POST':
 
         # Get data
-        user_id = flask.session['user_id']
+        user_id = get_user_id_by_session(flask.session)
+        form_data = flask.request.form.to_dict(flat = False)
 
-        request_json = get_request_json(flask.request)
-        front = request_json['new_flashcard_front'][0]
-        back = request_json['new_flashcard_back'][0]
-        labels = request_json['new_flashcard_label'][0]
-        flashcard.FlashCardServer.create_new_flashcard(user_id, front, back, labels)
+
+        front = form_data['new_flashcard_front'][0]
+        back = form_data['new_flashcard_back'][0]
+        labels = form_data['new_flashcard_label'][0]
+        current_datetime = datetime.datetime.now()
+        server.create_new_flashcard(user_id, front, back, labels, current_datetime)
 
 
 
@@ -159,24 +168,43 @@ def review():
 def flashcard_get():
 
 
-    next_flashcard = flashcard.FlashCardServer.get_next_flashcard(flask.session['user_id'])
-    print(next_flashcard)
-    next_flashcard_json = flask.jsonify(next_flashcard)
-
-    print('jsoooon', next_flashcard_json)
+    # Get next flashcard and user info
+    current_datetime = datetime.datetime.now()
+    next_flashcard = server.get_next_flashcard_by_user_id(flask.session['user_id'], current_datetime)
 
 
-    return next_flashcard_json
+    if next_flashcard:
+        return_json = flask.jsonify(next_flashcard)
+        return return_json
+    else:
+        return '404'
 
 
-@views.route('/flashcard/submit/answer=<answer>', methods = ['POST'])
-def flashcard_post(answer):
+@views.route('/flashcard/submit', methods = ['POST'])
+def flashcard_post():
 
+    user_id = get_user_id_by_session(flask.session)
 
     data = flask.request.get_json()
     flashcard_id = data['flashcard_id']
-    user_id =flask.session['user_id']
+    answer = data['answer']
+    date = datetime.datetime.now()
 
-
+    server.register_user_flashcard_action(user_id, flashcard_id, answer, date)
 
     return '201'
+
+
+def get_user_id_by_session(session):
+    user_id = str(session['user_id'])
+    return user_id
+
+
+
+
+def format_request(request):
+
+    for key, value in request.items():
+        request[key] = str(value)
+
+    return request
