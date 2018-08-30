@@ -39,7 +39,14 @@ def get_next_flashcard_by_user_id(user_id, current_datetime):
             return None
 
         else:
-            flashcard_id = flashcard_functions.get_next_flashcard_id(user_flashcard_relations, current_datetime)
+            user_flashcard_relation = flashcard_functions.get_next_user_flashcard_relation(user_flashcard_relations, current_datetime)
+            labels = user_flashcard_relation['labels']
+
+            flashcard_id = user_flashcard_relation['flashcard_id']
             flashcard = db_functions.get_flashcards_by_flashcard_ids(flashcard_id)[0]
 
-            return flashcard
+            flashcard_info = flashcard.copy()
+            flashcard_info['labels'] = labels
+
+
+            return flashcard_info

@@ -185,7 +185,7 @@ class DBServer(object):
         command = command + '(' + ' '.join([key for key in data.keys()]) + ')'
 
         # values
-        command = command + 'VALUES (' + ' '.join(['%s' for i in range(len(data))]) + ')'
+        command = command + ' VALUES (' + ' '.join(['%s' for i in range(len(data))]) + ')'
 
         if returning:
             command = ' '.join([command, 'RETURNING', returning])

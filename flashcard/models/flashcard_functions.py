@@ -46,8 +46,7 @@ def update_decay_time(old_decay_time, current_datetime, action_type):
 def get_p_recall(dt, decay_time):
     return np.exp(-dt/decay_time)
 
-def get_next_flashcard_id(user_flashcard_relations, current_datetime):
-
+def get_next_user_flashcard_relation(user_flashcard_relations, current_datetime):
     # Calculate recall probability
     dts = [(current_datetime - user_flashcard_relation['last_action_time']).seconds for user_flashcard_relation in user_flashcard_relations]
     decay_times = [user_flashcard_relation['decay_time'] for user_flashcard_relation in user_flashcard_relations]
@@ -55,6 +54,11 @@ def get_next_flashcard_id(user_flashcard_relations, current_datetime):
 
     # Select flashcard with lowest recall probability and return
     user_flashcard_relation = user_flashcard_relations[np.argmin(p_recalls)]
+
+    return user_flashcard_relation
+
+def get_next_flashcard_id(user_flashcard_relations, current_datetime):
+    user_flashcard_relation = get_next_user_flashcard_relation(user_flashcard_relations, current_datetime)
     flashcard_id = user_flashcard_relation['flashcard_id']
 
     return flashcard_id

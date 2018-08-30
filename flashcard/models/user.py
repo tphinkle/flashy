@@ -16,7 +16,7 @@ import db_server
 
 
 def register_user(email_address, password, name):
-    user = db_server.SQLServer.get_users_by_email(email_address)
+    user = db_server.DBServer.get_users_by_email(email_address)
 
 
     # Invalid e-mail address
@@ -26,7 +26,7 @@ def register_user(email_address, password, name):
     # User doesn't already exist
     if user == None:
         hashed_password = hash_password(password)
-        user_id = sql_server.SQLServer.add_user_to_users(email_address, hashed_password, name)
+        user_id = db_server.DBServer.add_user_to_users(email_address, hashed_password, name)
         return user_id
 
     # User already exists
@@ -35,7 +35,7 @@ def register_user(email_address, password, name):
 
 
 def login_user(email_address, password):
-    user = sql_server.SQLServer.get_users_by_email(email_address)
+    user = db_server.DBServer.get_users_by_email(email_address)
 
     # User does not exist
     if user == None:

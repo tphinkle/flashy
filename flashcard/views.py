@@ -46,10 +46,9 @@ def format_file_path_for_routing(file_path):
     return file_path
 
 
-def get_request_json(request):
-    return request.form.to_dict(flat=False)
-
-
+def get_user_id_by_session(session):
+    user_id = str(session['user_id'])
+    return user_id
 
 
 @views.route('/', methods=['GET', 'POST'])
@@ -120,7 +119,10 @@ def login():
 @views.route('/add', methods = ['GET', 'POST'])
 def add():
     '''
-    Add flashcard page.
+    * Add flashcard page.
+
+    * GET: Render the add  page.
+    * POST: Insert the flashcard into the DB.
     '''
 
     # Get method type
@@ -152,7 +154,9 @@ def add():
 @views.route('/review', methods = ['GET'])
 def review():
     '''
-    Review flashcards page.
+    * Review flashcards page.
+
+    * GET: Render the page
     '''
 
     # Get method type
@@ -166,14 +170,17 @@ def review():
 
 @views.route('/flashcard', methods = ['GET'])
 def flashcard_get():
+    '''
+    * Flashcard REST endpoint for fetching a new flashcard
+    '''
 
 
     # Get next flashcard and user info
     current_datetime = datetime.datetime.now()
     next_flashcard = server.get_next_flashcard_by_user_id(flask.session['user_id'], current_datetime)
 
-
     if next_flashcard:
+
         return_json = flask.jsonify(next_flashcard)
         return return_json
     else:
@@ -182,6 +189,9 @@ def flashcard_get():
 
 @views.route('/flashcard/submit', methods = ['POST'])
 def flashcard_post():
+    '''
+    * Flashcard REST endpoint for posting a flashcard submissions
+    '''
 
     user_id = get_user_id_by_session(flask.session)
 
@@ -193,18 +203,3 @@ def flashcard_post():
     server.register_user_flashcard_action(user_id, flashcard_id, answer, date)
 
     return '201'
-
-
-def get_user_id_by_session(session):
-    user_id = str(session['user_id'])
-    return user_id
-
-
-
-
-def format_request(request):
-
-    for key, value in request.items():
-        request[key] = str(value)
-
-    return request
